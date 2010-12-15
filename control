@@ -1,0 +1,10 @@
+Package: com.whomer.AppStoreUpdateSize
+Name: AppStore Update Size
+Pre-Depends: firmware (>= 4.2)
+Depends: mobilesubstrate
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Show the size of updates on the App Store
+Maintainer: Will Homer
+Author: Will Homer
+Section: Tweaks
