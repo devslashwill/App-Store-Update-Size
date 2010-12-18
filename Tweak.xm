@@ -1,5 +1,4 @@
 #import <UIKit/UIKit.h>
-#import <substrate.h>
 
 #define RGB(r, g, b) [UIColor colorWithRed:r/255.0 green:g/255.0 blue:b/255.0 alpha:1.0]
 
@@ -22,8 +21,9 @@
 	SUItem *item = MSHookIvar<SUItem *>(self, "_item");
 	SSItemOffer *offer = item.defaultStoreOffer;
 	float size = (((float)offer.estimatedDiskSpaceNeeded)/1024)/1024;
+	BOOL gameCenterEnabled = [item respondsToSelector:@selector(isGameCenterEnabled)] ? item.gameCenterEnabled : NO;
 	
-	if ([hdrView viewWithTag:435] == nil)
+	if (![hdrView viewWithTag:435])
 	{
 		UILabel *lbl = [[UILabel alloc] initWithFrame:CGRectZero];
 		lbl.backgroundColor = [UIColor clearColor];
@@ -34,7 +34,7 @@
 		lbl.shadowOffset = CGSizeMake(0,1);
 		hdrView.tag = 435;
 		[lbl sizeToFit];
-		lbl.frame = CGRectMake(310 - lbl.frame.size.width, item.gameCenterEnabled == YES ?  73 : 66, lbl.frame.size.width, lbl.frame.size.height);
+		lbl.frame = CGRectMake(310 - lbl.frame.size.width, gameCenterEnabled == YES ?  73 : 66, lbl.frame.size.width, lbl.frame.size.height);
 		[hdrView addSubview:lbl];
 		[lbl release];
 	}
