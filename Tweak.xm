@@ -32,7 +32,7 @@
 		lbl.text = [NSString stringWithFormat:@"%1.1f MB", size];
 		lbl.shadowColor = [UIColor whiteColor];
 		lbl.shadowOffset = CGSizeMake(0,1);
-		hdrView.tag = 435;
+		lbl.tag = 435;
 		[lbl sizeToFit];
 		lbl.frame = CGRectMake(310 - lbl.frame.size.width, gameCenterEnabled == YES ?  73 : 66, lbl.frame.size.width, lbl.frame.size.height);
 		[hdrView addSubview:lbl];
