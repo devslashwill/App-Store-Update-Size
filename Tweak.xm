@@ -1,10 +1,36 @@
-/* AppStoreUpdateSize
- * This is a nasty way to get around Apples changes to how updates are displayed (but it works, mostly).
- */
-
+#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
 #define RGB(r, g, b) [UIColor colorWithRed:r/255.0 green:g/255.0 blue:b/255.0 alpha:1.0]
+
+@interface DOMNode : NSObject
+@property (readonly, retain) DOMNode *parentNode;
+@property (copy) NSString *textContent;
+- (id)getElementsByClassName:(NSString *)className;
+@end
+
+@interface DOMElement : DOMNode
+- (id)getAttribute:(NSString *)attr;
+@end
+
+@interface DOMNodeList : NSObject
+@property (readonly) NSUInteger length;
+- (id)item:(NSUInteger)index;
+@end
+
+@interface DOMDocument : NSObject
+@property (retain) DOMElement *body;
+- (id)getElementsByClassName:(NSString *)className;
+@end
+
+@interface WebDataSource : NSObject
+- (NSURLRequest *)initialRequest;
+@end
+
+@interface WebFrame : NSObject
+- (DOMDocument *)DOMDocument;
+- (WebDataSource *)dataSource;
+@end
 
 @interface SSItemOffer : NSObject
 @property (readonly, assign, nonatomic) long long estimatedDiskSpaceNeeded;
@@ -19,6 +45,52 @@
 @end
 
 float currentSize = 0.0f;
+
+// iOS 5
+
+%group iOS5
+
+%hook WebDefaultUIKitDelegate
+
+- (void)webView:(id)webView didFinishDocumentLoadForFrame:(WebFrame *)frame
+{
+    if ([[[[[frame dataSource] initialRequest] URL] absoluteString] isEqualToString:@"http://ax.su.itunes.apple.com/WebObjects/MZSoftwareUpdate.woa/wa/viewSoftwareUpdates"])
+    {
+        DOMDocument *doc = [frame DOMDocument];
+        
+        DOMNodeList *appDivs = [doc.body getElementsByClassName:@"buy redownload one-click hide"];
+        
+        for (NSUInteger i = 0; i < appDivs.length; i++)
+        {
+            DOMElement *app = [appDivs item:i];
+            long long fileSize = [[app getAttribute:@"file-size"] longLongValue];
+            float fileSizeMB = (float)fileSize/1024/1024;
+            NSString *fileSizeStr = nil;
+            
+            if (fileSizeMB < 1.0)
+                fileSizeStr = [NSString stringWithFormat:@" %i KB", (int)fileSize/1024];
+            else if (fileSizeMB > 1000.0)
+                fileSizeStr = [NSString stringWithFormat:@" %1.1f GB", (float)fileSizeMB/1024];
+            else
+                fileSizeStr = [NSString stringWithFormat:@" %1.1f MB", fileSizeMB];
+            
+            DOMNodeList *listNodeList = [app.parentNode.parentNode getElementsByClassName:@"list"];
+            DOMNodeList *versionNodeList = [[listNodeList item:0] getElementsByClassName:@"version"];
+            DOMNode *versionNode = [versionNodeList item:0];
+            versionNode.textContent = [versionNode.textContent stringByAppendingString:fileSizeStr];
+        }
+    }
+    
+    %orig;
+}
+
+%end
+
+%end
+
+// iOS4.1 && 4.2.1
+
+%group iOS4
 
 %hook ASUpdatesViewController
 
@@ -53,3 +125,23 @@ float currentSize = 0.0f;
 }
 
 %end
+
+%end
+
+%ctor
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    
+    NSString *version = [[UIDevice currentDevice] systemVersion];
+    
+    if ([version intValue] >= 5)
+    {
+        %init(iOS5);
+    }
+    else if ([version floatValue] >= 4.1 && [version floatValue] < 4.3)
+    {
+        %init(iOS4);
+    }
+    
+    [pool drain];
+}
