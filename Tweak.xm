@@ -5,12 +5,13 @@
 
 @interface DOMNode : NSObject
 @property (readonly, retain) DOMNode *parentNode;
-@property (copy) NSString *textContent;
+@property (copy) NSString *innerHTML;
 - (id)getElementsByClassName:(NSString *)className;
 @end
 
 @interface DOMElement : DOMNode
 - (id)getAttribute:(NSString *)attr;
+@property (readonly, retain) DOMElement *firstElementChild;
 @end
 
 @interface DOMNodeList : NSObject
@@ -57,27 +58,24 @@ float currentSize = 0.0f;
     if ([[[[[frame dataSource] initialRequest] URL] absoluteString] isEqualToString:@"http://ax.su.itunes.apple.com/WebObjects/MZSoftwareUpdate.woa/wa/viewSoftwareUpdates"])
     {
         DOMDocument *doc = [frame DOMDocument];
-        
         DOMNodeList *appDivs = [doc.body getElementsByClassName:@"buy redownload one-click hide"];
         
         for (NSUInteger i = 0; i < appDivs.length; i++)
         {
             DOMElement *app = [appDivs item:i];
             long long fileSize = [[app getAttribute:@"file-size"] longLongValue];
-            float fileSizeMB = (float)fileSize/1024/1024;
             NSString *fileSizeStr = nil;
             
-            if (fileSizeMB < 1.0)
+            if (fileSize < 1048576)
                 fileSizeStr = [NSString stringWithFormat:@" %i KB", (int)fileSize/1024];
-            else if (fileSizeMB > 1024.0)
-                fileSizeStr = [NSString stringWithFormat:@" %1.1f GB", (float)fileSizeMB/1024];
+            else if (fileSize > 1073741824)
+                fileSizeStr = [NSString stringWithFormat:@" %1.1f GB", (float)fileSize/1024/1024/1024];
             else
-                fileSizeStr = [NSString stringWithFormat:@" %1.1f MB", fileSizeMB];
+                fileSizeStr = [NSString stringWithFormat:@" %1.1f MB", (float)fileSize/1024/1024];
             
-            DOMNodeList *listNodeList = [app.parentNode.parentNode getElementsByClassName:@"list"];
-            DOMNodeList *versionNodeList = [[listNodeList item:0] getElementsByClassName:@"version"];
+            DOMNodeList *versionNodeList = [app.parentNode.parentNode getElementsByClassName:@"version"];
             DOMNode *versionNode = [versionNodeList item:0];
-            versionNode.textContent = [versionNode.textContent stringByAppendingString:fileSizeStr];
+            versionNode.innerHTML = [versionNode.innerHTML stringByAppendingString:fileSizeStr];
         }
     }
     
