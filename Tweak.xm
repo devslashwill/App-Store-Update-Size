@@ -69,7 +69,7 @@ float currentSize = 0.0f;
             
             if (fileSizeMB < 1.0)
                 fileSizeStr = [NSString stringWithFormat:@" %i KB", (int)fileSize/1024];
-            else if (fileSizeMB > 1000.0)
+            else if (fileSizeMB > 1024.0)
                 fileSizeStr = [NSString stringWithFormat:@" %1.1f GB", (float)fileSizeMB/1024];
             else
                 fileSizeStr = [NSString stringWithFormat:@" %1.1f MB", fileSizeMB];
