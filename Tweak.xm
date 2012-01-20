@@ -2,6 +2,7 @@
 #import <UIKit/UIKit.h>
 
 #define RGB(r, g, b) [UIColor colorWithRed:r/255.0 green:g/255.0 blue:b/255.0 alpha:1.0]
+#define IS_IPAD ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
 
 @interface DOMNode : NSObject
 @property (readonly, retain) DOMNode *parentNode;
@@ -11,6 +12,7 @@
 
 @interface DOMElement : DOMNode
 - (id)getAttribute:(NSString *)attr;
+- (void)setAttribute:(NSString *)attr value:(NSString *)value;
 @property (readonly, retain) DOMElement *firstElementChild;
 @end
 
@@ -31,6 +33,7 @@
 @interface WebFrame : NSObject
 - (DOMDocument *)DOMDocument;
 - (WebDataSource *)dataSource;
+- (NSString *)_stringByEvaluatingJavaScriptFromString:(NSString *)js;
 @end
 
 @interface SSItemOffer : NSObject
@@ -56,14 +59,16 @@ float currentSize = 0.0f;
 - (void)webView:(id)webView didFinishDocumentLoadForFrame:(WebFrame *)frame
 {
     if ([[[[[frame dataSource] initialRequest] URL] absoluteString] isEqualToString:@"http://ax.su.itunes.apple.com/WebObjects/MZSoftwareUpdate.woa/wa/viewSoftwareUpdates"])
-    {
+    {        
         DOMDocument *doc = [frame DOMDocument];
-        DOMNodeList *appDivs = [doc.body getElementsByClassName:@"buy redownload one-click hide"];
+        DOMNodeList *appDivs = [doc.body getElementsByClassName:@"lockup application"];
         
         for (NSUInteger i = 0; i < appDivs.length; i++)
         {
             DOMElement *app = [appDivs item:i];
-            long long fileSize = [[app getAttribute:@"file-size"] longLongValue];
+            DOMElement *buyLine = [[app getElementsByClassName:@"buy-line"] item:0];
+            DOMElement *infoDiv = [buyLine lastElementChild];
+            long long fileSize = [[infoDiv getAttribute:@"file-size"] longLongValue];
             NSString *fileSizeStr = nil;
             
             if (fileSize < 1048576)
@@ -73,9 +78,18 @@ float currentSize = 0.0f;
             else
                 fileSizeStr = [NSString stringWithFormat:@" %1.1f MB", (float)fileSize/1024/1024];
             
-            DOMNodeList *versionNodeList = [app.parentNode.parentNode getElementsByClassName:@"version"];
-            DOMNode *versionNode = [versionNodeList item:0];
-            versionNode.innerHTML = [versionNode.innerHTML stringByAppendingString:fileSizeStr];
+            if (IS_IPAD == YES)
+            {
+                DOMElement *list = [[app getElementsByClassName:@"list"] item:0];
+                list.innerHTML = [NSString stringWithFormat:@"<li>%@</li>%@", fileSizeStr, list.innerHTML];
+                [[list style] setPaddingTop:@"3px"];
+            }
+            else
+            {
+                DOMNodeList *versionNodeList = [app.parentNode.parentNode getElementsByClassName:@"version"];
+                DOMNode *versionNode = [versionNodeList item:0];
+                versionNode.innerHTML = [versionNode.innerHTML stringByAppendingString:fileSizeStr];
+            }
         }
     }
     

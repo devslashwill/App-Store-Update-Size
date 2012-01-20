@@ -1,4 +1,4 @@
-export THEOS_DEVICE_IP=192.168.2.5
+export THEOS_DEVICE_IP=192.168.2.7
 include theos/makefiles/common.mk
 
 LIBRARY_NAME = AppStoreUpdateSize
@@ -11,5 +11,6 @@ AppStoreUpdateSize_LDFLAGS = -lsubstrate
 include $(THEOS_MAKE_PATH)/library.mk
 
 after-install::
+	-rm *.deb
 	-install.exec "killall AppStore"
 	-install.exec "open com.apple.AppStore"
