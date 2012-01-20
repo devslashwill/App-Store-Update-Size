@@ -86,8 +86,7 @@ float currentSize = 0.0f;
             }
             else
             {
-                DOMNodeList *versionNodeList = [app.parentNode.parentNode getElementsByClassName:@"version"];
-                DOMNode *versionNode = [versionNodeList item:0];
+                DOMElement *versionNode = [[app getElementsByClassName:@"version"] item:0];
                 versionNode.innerHTML = [versionNode.innerHTML stringByAppendingString:fileSizeStr];
             }
         }
